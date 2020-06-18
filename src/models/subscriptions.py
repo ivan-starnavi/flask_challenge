@@ -1,11 +1,11 @@
 """Subscription related models and database functionality"""
-from datetime import datetime
 from enum import Enum
 
 from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.orm import contains_eager
 
 from src.models.base import db
-from src.models.service_codes import ServiceCode, subscriptions_service_codes
+from src.models.service_codes import subscriptions_service_codes
 from src.models.usages import DataUsage
 
 
@@ -38,6 +38,11 @@ class Subscription(db.Model):
     )
 
     data_usages = db.relationship(DataUsage, back_populates="subscription")
+    versions = db.relationship(
+        "SubscriptionVersion",
+        back_populates="subscription",
+        order_by="SubscriptionVersion.date_created"
+    )
 
     def __repr__(self):  # pragma: no cover
         return (
@@ -66,6 +71,23 @@ class Subscription(db.Model):
         """Helper property to return names of active service codes"""
         return [code.name for code in self.service_codes]
 
+    @classmethod
+    def get_subscriptions_in_cycle(cls, billing_cycle, subscription_id=None):
+        query = cls.query
+
+        if subscription_id is not None:
+            query = query.filter_by(id=subscription_id)
+
+        query = query \
+            .join(cls.versions) \
+            .options(contains_eager(cls.versions)) \
+            .filter(
+                SubscriptionVersion.date_start >= billing_cycle.start_date,
+                SubscriptionVersion.date_end <= billing_cycle.end_date,
+            )
+
+        return query
+
 
 class SubscriptionVersion(db.Model):
     """Model to represent versioning table for subscriptions"""
@@ -75,7 +97,9 @@ class SubscriptionVersion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
     subscription_id = db.Column(db.Integer, db.ForeignKey("subscriptions.id"), nullable=False)
-    subscription = db.relationship("Subscription", foreign_keys=[subscription_id], lazy="select")
+    subscription = db.relationship(
+        "Subscription", foreign_keys=[subscription_id], lazy="select", back_populates="versions"
+    )
     
     plan_id = db.Column(db.Integer, db.ForeignKey("plans.id"), nullable=False)
     plan = db.relationship("Plan", foreign_keys=[plan_id], lazy="select")

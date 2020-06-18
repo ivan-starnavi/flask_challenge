@@ -1,7 +1,5 @@
 """Plans and Service related models and database functionality"""
 from flask import current_app
-from sqlalchemy import and_, or_
-from sqlalchemy.dialects.postgresql import ARRAY
 from src.models.base import db
 
 # Join table for Subscription and ServiceCode
@@ -22,6 +20,8 @@ class Plan(db.Model):
     # amount of data available for a given billing cycle
     mb_available = db.Column(db.BigInteger)
     is_unlimited = db.Column(db.Boolean)
+
+    versions = db.relationship('SubscriptionVersion', back_populates='plan')
 
     def __repr__(self):  # pragma: no cover
         return (

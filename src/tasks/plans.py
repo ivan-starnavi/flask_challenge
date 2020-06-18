@@ -2,7 +2,7 @@
 from celery.utils.log import get_task_logger
 
 from src.celery_app import celery
-from src.models.subscriptions import SubscriptionVersion, Subscription
+from src.models.subscriptions import Subscription
 from src.models.cycles import BillingCycle
 
 log = get_task_logger(__name__)
@@ -13,15 +13,7 @@ def _make_subscription_version_result_entry(subscription_version):
     return sv.plan.mb_available, sv.date_start.isoformat(), sv.date_end.isoformat()
 
 
-def get_subscription_versions(billing_cycle, subscription):
-    versions = SubscriptionVersion.query.filter(
-        SubscriptionVersion.subscription_id == subscription.id,
-        SubscriptionVersion.date_start >= billing_cycle.start_date,
-        SubscriptionVersion.date_end <= billing_cycle.end_date,
-    ).order_by(SubscriptionVersion.date_created.asc())
-    # execute sql
-    versions = list(versions)
-
+def _process_subscription_versions(versions):
     if not versions:
         return []
 
@@ -38,25 +30,6 @@ def get_subscription_versions(billing_cycle, subscription):
     return [_make_subscription_version_result_entry(sv) for sv in result]
 
 
-def get_active_subscriptions_in_cycle(billing_cycle):
-    subquery = SubscriptionVersion.query.filter(
-        SubscriptionVersion.subscription_id == Subscription.id,
-        SubscriptionVersion.date_start >= billing_cycle.start_date,
-        SubscriptionVersion.date_end <= billing_cycle.end_date,
-    )
-    subscriptions = Subscription.query.filter(subquery.exists())
-
-    result = {}
-    for subscription in subscriptions:
-        plan = subscription.plan
-
-        if plan.mb_available not in result:
-            result[plan.mb_available] = []
-        result[plan.mb_available].append(subscription.id)
-
-    return result
-
-
 @celery.task()
 def query_subscription_plans(billing_cycle_id, subscription_id=None):
     """Add google style doc string here
@@ -66,11 +39,21 @@ def query_subscription_plans(billing_cycle_id, subscription_id=None):
     """
     billing_cycle = BillingCycle.query.filter_by(id=billing_cycle_id).one()
 
+    # 1. handle single subscription (the case when subscription_id param has been passed)
     if subscription_id is not None:
-        # ensure that subscription exists
-        subscription = Subscription.query.filter_by(id=subscription_id).one()
-        return get_subscription_versions(billing_cycle, subscription)
-    else:
-        return get_active_subscriptions_in_cycle(billing_cycle)
+        subscription = Subscription.get_subscriptions_in_cycle(billing_cycle, subscription_id).one()
+        return _process_subscription_versions(subscription.versions)
 
+    # 2. if subscription_id hasn't been passed - query and process all subscriptions within billing cycle
+    subscriptions = Subscription.get_subscriptions_in_cycle(billing_cycle)
 
+    plans = {}
+    for subscription in subscriptions:
+        processed_versions = _process_subscription_versions(subscription.versions)
+
+        for mb_available, _, _ in processed_versions:
+            if mb_available not in plans:
+                plans[mb_available] = []
+            plans[mb_available].append(subscription.id)
+
+    return plans
