@@ -25,21 +25,36 @@ def get_subscription_versions(billing_cycle, subscription):
     if not versions:
         return []
 
-    result = []
-    current = versions[0]
+    result = [versions[0]]
 
-    for version in versions[1:]:
+    for version in versions:
+        last = result[-1]
         # check whether next subscription version overrides the previous one – if no, the current is actual one
-        if version.date_start != current.date_start and version.date_end != current.date_end:
-            result.append(_make_subscription_version_result_entry(current))
-        current = version
-    result.append(_make_subscription_version_result_entry(current))
+        if version.date_start != last.date_start and version.date_end != last.date_end:
+            result.append(version)
+        else:
+            result[-1] = version
 
-    return result
+    return [_make_subscription_version_result_entry(sv) for sv in result]
 
 
 def get_active_subscriptions_in_cycle(billing_cycle):
-    pass
+    subquery = SubscriptionVersion.query.filter(
+        SubscriptionVersion.subscription_id == Subscription.id,
+        SubscriptionVersion.date_start >= billing_cycle.start_date,
+        SubscriptionVersion.date_end <= billing_cycle.end_date,
+    )
+    subscriptions = Subscription.query.filter(subquery.exists())
+
+    result = {}
+    for subscription in subscriptions:
+        plan = subscription.plan
+
+        if plan.mb_available not in result:
+            result[plan.mb_available] = []
+        result[plan.mb_available].append(subscription.id)
+
+    return result
 
 
 @celery.task()
