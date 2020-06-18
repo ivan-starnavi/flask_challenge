@@ -19,6 +19,6 @@ def get_object_or_404(model, mid):
 
     """
     try:
-        return model.query.one(pk=mid)
+        return model.query.get(mid)
     except SQLAlchemyError:
         abort(404)

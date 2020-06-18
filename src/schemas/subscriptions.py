@@ -16,6 +16,9 @@ class SubscriptionSchema(Schema):
     plan = fields.Nested(PlanSchema, dump_only=True)
     service_codes = fields.Method("get_service_codes")
 
+    activation_date = fields.DateTime()
+    expiry_date = fields.DateTime()
+
     def get_service_codes(self, obj):
         """field get method to return service code names"""
         return [code.name for code in obj.service_codes]

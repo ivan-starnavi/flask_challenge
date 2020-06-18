@@ -1,6 +1,5 @@
 """Celery app module"""
 from celery import Celery
-from celery.signals import task_failure, task_postrun
 from celery.utils.log import get_task_logger
 
 celery = Celery("att")
