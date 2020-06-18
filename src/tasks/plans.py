@@ -8,11 +8,6 @@ from src.models.cycles import BillingCycle
 log = get_task_logger(__name__)
 
 
-def _make_subscription_version_result_entry(subscription_version):
-    sv = subscription_version
-    return sv.plan.mb_available, sv.date_start.isoformat(), sv.date_end.isoformat()
-
-
 def _process_subscription_versions(versions):
     if not versions:
         return []
@@ -27,7 +22,7 @@ def _process_subscription_versions(versions):
         else:
             result[-1] = version
 
-    return [_make_subscription_version_result_entry(sv) for sv in result]
+    return [(sv.plan.mb_available, sv.date_start.isoformat(), sv.date_end.isoformat()) for sv in result]
 
 
 @celery.task()

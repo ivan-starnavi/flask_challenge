@@ -29,5 +29,5 @@ def make_shell_context():
         "Subscription": Subscription,
         "DataUsage": DataUsage,
 
-        "test": query_subscription_plans,
+        "query_subscription_plans": query_subscription_plans,
     }
