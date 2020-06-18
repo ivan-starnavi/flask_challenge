@@ -27,9 +27,27 @@ def _process_subscription_versions(versions):
 
 @celery.task()
 def query_subscription_plans(billing_cycle_id, subscription_id=None):
-    """Add google style doc string here
+    """This function takes id of BillingCycle and id of Subscription and:
+    1. if ``subscription_id`` has been passed -> returns list of tuples containing actual plans for this subscriptions
+        within given billing cycle
+    2. if ``subscription_id`` hasn't been passed -> return dict with keys as plans and values as list of
+        subscription ids that were active within given billing cycle
 
-    (https://www.sphinx-doc.org/en/1.7/ext/example_google.html)
+    Args:
+        billing_cycle_id (int): identifier for BillingCycle object
+        subscription_id (int, optional): identifier for Subscription object
+
+    Returns:
+        list(tuple(int, str, str)): for the case when subscription_id has been passed. Each tuple contains 3 elements:
+            amount of megabytes available for certain plan, starting effective and ending effective dates for that plan
+
+        dict(int, list(int)): for the case when subscription_id hasn't been passed. Keys of the dictionary are amount of
+            megabytes available for plan and values are lists of subscriptions ids those were using corresponding
+            plan within given billing cycle
+
+    Raises:
+        sqlalchemy.orm.exc.NoResultFound: if either there is no BillingCycle object for billing_cycle_id or
+            no Subscription object for subscription_id (if it is not None)
 
     """
     billing_cycle = BillingCycle.query.filter_by(id=billing_cycle_id).one()
