@@ -65,3 +65,21 @@ class Subscription(db.Model):
     def service_code_names(self):
         """Helper property to return names of active service codes"""
         return [code.name for code in self.service_codes]
+
+
+class SubscriptionVersion(db.Model):
+    """Model to represent versioning table for subscriptions"""
+
+    __tablename__ = "subscriptions_versions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    subscription_id = db.Column(db.Integer, db.ForeignKey("subscriptions.id"), nullable=False)
+    subscription = db.relationship("Subscription", foreign_keys=[subscription_id], lazy="select")
+    
+    plan_id = db.Column(db.Integer, db.ForeignKey("plans.id"), nullable=False)
+    plan = db.relationship("Plan", foreign_keys=[plan_id], lazy="select")
+
+    date_start = db.Column(db.TIMESTAMP(timezone=True))
+    date_end = db.Column(db.TIMESTAMP(timezone=True))
+    date_created = db.Column(db.TIMESTAMP(timezone=True))
