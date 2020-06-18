@@ -1,7 +1,5 @@
 """Usage related models and database functionality"""
-from decimal import Decimal
 from src.models.base import db
-from src.models.cycles import BillingCycle
 
 
 class DataUsage(db.Model):

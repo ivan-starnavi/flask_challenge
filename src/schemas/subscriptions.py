@@ -1,5 +1,5 @@
 """Subscription schemas to assist with sub serialization"""
-from marshmallow import fields, Schema, validate
+from marshmallow import fields, Schema
 
 from src.schemas.service_codes import PlanSchema
 

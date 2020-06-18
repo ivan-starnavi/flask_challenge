@@ -1,7 +1,6 @@
 """Utilities for models to inherit or use"""
 from sqlalchemy.exc import SQLAlchemyError
 from flask import abort
-from http import HTTPStatus
 
 
 def get_object_or_404(model, mid):

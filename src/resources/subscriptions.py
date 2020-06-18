@@ -1,6 +1,5 @@
 """Subscription resource for handling any subscription requests"""
 from flask import jsonify
-from webargs import fields
 from webargs.flaskparser import use_kwargs
 from flask_restful import Resource
 

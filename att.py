@@ -16,7 +16,7 @@ def make_shell_context():
     from src.models.base import db
     from src.models.cycles import BillingCycle
     from src.models.service_codes import Plan, ServiceCode
-    from src.models.subscriptions import Subscription
+    from src.models.subscriptions import Subscription, SubscriptionVersion
     from src.models.usages import DataUsage
 
     from src.tasks.plans import query_subscription_plans
@@ -28,6 +28,7 @@ def make_shell_context():
         "ServiceCode": ServiceCode,
         "Subscription": Subscription,
         "DataUsage": DataUsage,
-
+        "SubscriptionVersion": SubscriptionVersion,
+        # placed this in shell's startup in order to make debugging easier
         "query_subscription_plans": query_subscription_plans,
     }

@@ -3,8 +3,8 @@
 Imports any Flask resources and registers them as API routes to accept
 requests and return responses on the Flask server.
 """
-from flask import Blueprint, current_app, jsonify
-from flask_restful import Api, Resource
+from flask import Blueprint
+from flask_restful import Api
 
 
 def register_routes(_app):
