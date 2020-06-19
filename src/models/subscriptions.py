@@ -64,7 +64,7 @@ class Subscription(db.Model):
             list: objects returned from query result
 
         """
-        return cls.query.filter(**kwargs).all()
+        return cls.query.filter_by(**kwargs).all()
 
     @property
     def service_code_names(self):
