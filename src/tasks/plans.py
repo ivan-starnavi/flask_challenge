@@ -54,8 +54,12 @@ def query_subscription_plans(billing_cycle_id, subscription_id=None):
 
     # 1. handle single subscription (the case when subscription_id param has been passed)
     if subscription_id is not None:
-        subscription = Subscription.get_subscriptions_in_cycle(billing_cycle, subscription_id).one()
-        return _process_subscription_versions(subscription.versions)
+        # check whether subscription exists - raises Exception if not
+        Subscription.query.filter_by(id=subscription_id).one()
+        # query its versions whithin billing cycle
+        subscription = Subscription.get_subscriptions_in_cycle(billing_cycle, subscription_id).one_or_none()
+        versions = [] if subscription is None else subscription.versions
+        return _process_subscription_versions(versions)
 
     # 2. if subscription_id hasn't been passed - query and process all subscriptions within billing cycle
     subscriptions = Subscription.get_subscriptions_in_cycle(billing_cycle)

@@ -73,6 +73,17 @@ class Subscription(db.Model):
 
     @classmethod
     def get_subscriptions_in_cycle(cls, billing_cycle, subscription_id=None):
+        """The function filters subscriptions that have versions within given billing cycle. If subscription_id
+            argument has been passed the function returns queryset that is filtered with this id.
+
+        Args:
+            billing_cycle (BillingCycle): object of BillingCycle
+            subscription_id (int, optional): id of Subscription object, default is None
+
+        Returns:
+            sqlalchemy.orm.query.Query: returns queryset for subscription that have versions withing given
+                billing cycle with joined versions array to every subscription (ordered by date_created).
+        """
         query = cls.query
 
         if subscription_id is not None:
