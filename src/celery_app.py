@@ -2,7 +2,7 @@
 from celery import Celery
 from celery.utils.log import get_task_logger
 
-celery = Celery("att")
+celery = Celery("app")
 
 logger = get_task_logger(__name__)
 
