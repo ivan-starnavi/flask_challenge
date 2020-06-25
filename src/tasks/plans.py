@@ -1,4 +1,6 @@
 """Plan related tasks"""
+from collections import defaultdict
+
 from celery.utils.log import get_task_logger
 
 from src.celery_app import celery
@@ -61,13 +63,11 @@ def query_subscription_plans(billing_cycle_id, subscription_id=None):
     # 2. if subscription_id hasn't been passed - query and process all subscriptions within billing cycle
     subscriptions = Subscription.get_subscriptions_in_cycle(billing_cycle)
 
-    plans = {}
+    plans = defaultdict(list)
     for subscription in subscriptions:
         processed_versions = _process_subscription_versions(subscription.versions)
 
         for mb_available, _, _ in processed_versions:
-            if mb_available not in plans:
-                plans[mb_available] = []
             plans[mb_available].append(subscription.id)
 
     return plans
