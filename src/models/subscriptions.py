@@ -1,6 +1,7 @@
 """Subscription related models and database functionality"""
 from enum import Enum
 
+from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import contains_eager
 
@@ -90,12 +91,15 @@ class Subscription(db.Model):
             query = query.filter_by(id=subscription_id)
 
         query = query \
-            .join(cls.versions) \
-            .options(contains_eager(cls.versions)) \
-            .filter(
-                SubscriptionVersion.date_start >= billing_cycle.start_date,
-                SubscriptionVersion.date_end <= billing_cycle.end_date,
-            )
+            .outerjoin(
+                SubscriptionVersion,
+                and_(
+                    Subscription.id == SubscriptionVersion.subscription_id,
+                    SubscriptionVersion.date_start >= billing_cycle.start_date,
+                    SubscriptionVersion.date_end <= billing_cycle.end_date,
+                ),
+            ) \
+            .options(contains_eager(cls.versions))
 
         return query
 
